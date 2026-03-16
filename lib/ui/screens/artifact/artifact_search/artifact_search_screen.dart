@@ -68,7 +68,7 @@ class _ArtifactSearchScreenState extends State<ArtifactSearchScreen> with GetItS
   void _handleResultPressed(SearchData o) => context.go(ScreenPaths.artifact(o.id.toString()));
 
   void _handlePanelControllerChanged() {
-    settingsLogic.isSearchPanelOpen.value = panelController.value;
+    settingsLogic.setPanelOpen(panelController.value);
   }
 
   void _updateResults() {
