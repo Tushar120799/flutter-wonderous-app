@@ -1,0 +1,143 @@
+codebase:
+  name: "Wonderous"
+  vision: "A visually rich Flutter showcase app that educates users about the 7 Wonders of the World, deployed on iOS, Android, Web (WASM), macOS, and Windows."
+  stack:
+    languages:
+      - dart
+    frameworks:
+      - name: Flutter
+        target_version: "^3.32.0"
+        current_version: "3.32.x"
+    key_packages:
+      - go_router         # navigation
+      - get_it            # service locator / dependency injection
+      - get_it_mixin      # reactive widget rebuilds
+      - provider          # secondary state management
+      - flutter_animate   # animations
+      - google_maps_flutter
+      - shared_preferences
+  docs:
+    - name: README.md
+      sections:
+        - Installation
+        - App Downloads
+        - WASM
+        - Impeller Rendering
+        - About gskinner
+        - License
+        - Private Build
+  references:
+    - ./analysis_options.yaml
+    - ./pubspec.yaml
+
+zones:
+  - name: "ui_screens"
+    description: "Screen-level UI widgets; each subdirectory is a distinct app screen (home, editorial, artifact, timeline, photo gallery, collection, intro, etc.)"
+    paths:
+      - lib/ui/screens/**
+    allowed_practices:
+      - StatelessWidget for screens with no local state
+      - GetItMixin for reactive state from logic layer
+      - Extracting widgets into lib/ui/screens/<screen>/widgets/
+      - Using flutter_animate for entrance/exit animations
+      - Using go_router for navigation (context.push / context.go)
+    forbidden_practices:
+      - Inline business logic or HTTP calls inside widgets
+      - Direct use of shared_preferences inside screen widgets
+      - Class-level setState for state that belongs in the logic layer
+      - Nested widget trees deeper than ~5 levels without extracting sub-widgets
+    rules:
+      max_file_lines: 300
+      test_coverage: "widget tests for key interaction paths"
+      exceptions: "Generated localisation files in l10n/ are exempt"
+
+  - name: "ui_common"
+    description: "Reusable UI primitives: buttons, modals, utility widgets, app-wide controls."
+    paths:
+      - lib/ui/common/**
+      - lib/ui/app_scaffold.dart
+    allowed_practices:
+      - Stateless, composable widgets
+      - Accepting callbacks rather than reading global state directly
+      - Documenting public API with dartdoc comments
+    forbidden_practices:
+      - Business logic inside common controls
+      - Hard-coded wonder-specific colours or strings
+    rules:
+      max_file_lines: 250
+
+  - name: "logic"
+    description: "Business logic layer: service-locator singletons (AppLogic, WondersLogic, SettingsLogic, etc.), data models, API services, and utility helpers."
+    paths:
+      - lib/logic/**
+    allowed_practices:
+      - get_it singletons registered in main.dart
+      - Async initialisation via init() methods
+      - Typed data classes (immutable where possible)
+      - Separation of logic (XxxLogic) from network/storage (XxxService)
+    forbidden_practices:
+      - BuildContext usage inside logic classes
+      - Direct Flutter widget imports in logic files
+      - Returning raw dynamic types from services
+    rules:
+      max_file_lines: 300
+      test_coverage: "unit tests for all public methods on logic classes"
+
+  - name: "data"
+    description: "Static wonder data, search data, and data models used across the app."
+    paths:
+      - lib/logic/data/**
+    allowed_practices:
+      - Immutable data classes
+      - Factory constructors and fromJson / toJson where needed
+    forbidden_practices:
+      - Mutable singletons in data classes
+      - Network calls inside data files
+    rules:
+      max_file_lines: 2000
+      exceptions: "Search data files (search/*.dart) contain large static datasets and are exempt from line limits"
+
+  - name: "localisation"
+    description: "Generated and authored ARB/Dart localisation files."
+    paths:
+      - lib/l10n/**
+    allowed_practices:
+      - Using AppLocalizations.of(context) via common_libs import
+    forbidden_practices:
+      - Hard-coded English strings in UI widgets that should be localised
+    rules:
+      exceptions: "Generated files are exempt from all linting rules"
+
+  - name: "tools"
+    description: "Developer-only helper scripts for downloading and searching artifacts (not shipped in production builds)."
+    paths:
+      - lib/_tools/**
+    allowed_practices:
+      - Standalone scripts invoked outside the main app
+    forbidden_practices:
+      - Importing tool files from main app code
+    rules:
+      max_file_lines: 500
+
+  - name: "civic_skills"
+    description: "Civic agentic framework skills, ledger, and planning artifacts."
+    paths:
+      - .claude/skills/**
+      - civic_cli/**
+      - work/**
+    allowed_practices:
+      - Bash / Python scripts
+      - Markdown context files
+      - assertion-backed markdown reports (.a.md)
+    forbidden_practices:
+      - Dart/Flutter code inside skill directories
+    rules:
+      exceptions: "No Dart linting applies here"
+
+agent_scratchpad:
+  notes:
+    - "No test directory exists — zero test coverage is the highest-risk gap."
+    - "Mixed state management: GetIt is primary, Provider is secondary; investigate whether both are needed."
+    - "common_libs.dart is a broad barrel file — watch for accidental coupling."
+    - "WASM deployment target adds constraints: avoid dart:io, web-incompatible packages."
+    - "Large static search data files in lib/logic/data/wonders_data/search/ are intentionally large."

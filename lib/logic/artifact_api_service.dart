@@ -1,17 +1,21 @@
+import 'package:http/http.dart' as http;
 import 'package:wonders/logic/common/http_client.dart';
 import 'package:wonders/logic/data/artifact_data.dart';
 
 class ArtifactAPIService {
   final String _baseMETUrl = 'https://collectionapi.metmuseum.org/public/collection/v1';
   final String _baseSelfHostedUrl = 'https://www.wonderous.info/met';
+  final http.Client _httpClient;
+
+  ArtifactAPIService({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
 
   Future<ServiceResult<ArtifactData?>> getMetObjectByID(String id) async {
-    HttpResponse? response = await HttpClient.send('$_baseMETUrl/objects/$id');
+    HttpResponse? response = await HttpClient.sendWithClient(_httpClient, '$_baseMETUrl/objects/$id');
     return ServiceResult<ArtifactData?>(response, _parseArtifactData);
   }
 
   Future<ServiceResult<ArtifactData?>> getSelfHostedObjectByID(String id) async {
-    HttpResponse? response = await HttpClient.send('$_baseSelfHostedUrl/$id.json');
+    HttpResponse? response = await HttpClient.sendWithClient(_httpClient, '$_baseSelfHostedUrl/$id.json');
     return ServiceResult<ArtifactData?>(response, _parseArtifactData);
   }
 
