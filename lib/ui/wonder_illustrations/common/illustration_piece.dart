@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:provider/provider.dart';
 import 'package:wonders/common_libs.dart';
 import 'package:wonders/ui/wonder_illustrations/common/wonder_illustration_builder.dart';
 
