@@ -142,23 +142,10 @@ class _IntroScreenState extends State<IntroScreen> {
                         ),
 
                         // masked image:
-                        SizedBox(
-                          height: smallMode ? _imageSizeSmall : _imageSize,
-                          width: smallMode ? _imageSizeSmall : _imageSize,
-                          child: ValueListenableBuilder<int>(
-                            valueListenable: _currentPage,
-                            builder: (_, value, __) {
-                              return AnimatedSwitcher(
-                                duration: $styles.times.slow,
-                                child: KeyedSubtree(
-                                  key: ValueKey(
-                                    value,
-                                  ), // so AnimatedSwitcher sees it as a different child.
-                                  child: _PageImage(data: pageData[value]),
-                                ),
-                              );
-                            },
-                          ),
+                        _PageImageSection(
+                          smallMode: smallMode,
+                          currentPage: _currentPage,
+                          pageData: pageData,
                         ),
 
                         // placeholder gap for text:
@@ -352,8 +339,38 @@ class _WonderousLogo extends StatelessWidget {
   }
 }
 
+class _PageImageSection extends StatelessWidget {
+  const _PageImageSection({
+    required this.smallMode,
+    required this.currentPage,
+    required this.pageData,
+  });
+
+  final bool smallMode;
+  final ValueNotifier<int> currentPage;
+  final List<_PageData> pageData;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: smallMode ? _IntroScreenState._imageSizeSmall : _IntroScreenState._imageSize,
+      width: smallMode ? _IntroScreenState._imageSizeSmall : _IntroScreenState._imageSize,
+      child: ValueListenableBuilder<int>(
+        valueListenable: currentPage,
+        builder: (_, value, __) {
+          return AnimatedSwitcher(
+            duration: $styles.times.slow,
+            // Use ValueKey directly on _PageImage so AnimatedSwitcher detects the child change
+            child: _PageImage(key: ValueKey(value), data: pageData[value]),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _PageImage extends StatelessWidget {
-  const _PageImage({required this.data});
+  const _PageImage({super.key, required this.data});
 
   final _PageData data;
 

@@ -101,111 +101,32 @@ class _WonderEditorialScreenState extends State<WonderEditorialScreen> {
                     child: ColoredBox(color: widget.data.type.bgColor),
                   ),
 
-                  /// Top Illustration - Sits underneath the scrolling content, fades out as it scrolls
-                  SizedBox(
-                    height: illustrationHeight,
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _scrollPos,
-                      builder: (_, value, child) {
-                        // get some value between 0 and 1, based on the amt scrolled
-                        double opacity = (1 - value / 700).clamp(0, 1);
-                        return Opacity(opacity: opacity, child: child);
-                      },
-                      // This is due to a bug: https://github.com/flutter/flutter/issues/101872
-                      child: RepaintBoundary(
-                        child: _TopIllustration(
-                          widget.data.type,
-                          // Polish: Inject the content padding into the illustration as an offset, so it can center itself relative to the content
-                          // this allows the background to extend underneath the vertical side nav when it has rounded corners.
-                          fgOffset: Offset(widget.contentPadding.left / 2, 0),
-                        ),
-                      ),
-                    ),
+                  /// Top Illustration
+                  _EditorialIllustrationSection(
+                    scrollPos: _scrollPos,
+                    illustrationHeight: illustrationHeight,
+                    wonderType: widget.data.type,
+                    contentPadding: widget.contentPadding,
                   ),
 
-                  /// Scrolling content - Includes an invisible gap at the top, and then scrolls over the illustration
-                  TopCenter(
-                    child: Padding(
-                      padding: widget.contentPadding,
-                      child: SizedBox(
-                        child: FocusTraversalGroup(
-                          child: FullscreenKeyboardListScroller(
-                            scrollController: _scroller,
-                            child: CustomScrollView(
-                              controller: _scroller,
-                              scrollBehavior: ScrollConfiguration.of(context).copyWith(),
-                              key: PageStorageKey('editorial'),
-                              slivers: [
-                                /// Invisible padding at the top of the list, so the illustration shows through the btm
-                                SliverToBoxAdapter(
-                                  child: SizedBox(height: illustrationHeight),
-                                ),
-
-                                /// Text content, animates itself to hide behind the app bar as it scrolls up
-                                SliverToBoxAdapter(
-                                  child: ValueListenableBuilder<double>(
-                                    valueListenable: _scrollPos,
-                                    builder: (_, value, child) {
-                                      double offsetAmt = max(0, value * .3);
-                                      double opacity = (1 - offsetAmt / 150).clamp(0, 1);
-                                      return Transform.translate(
-                                        offset: Offset(0, offsetAmt),
-                                        child: Opacity(opacity: opacity, child: child),
-                                      );
-                                    },
-                                    child: _TitleText(widget.data, scroller: _scroller),
-                                  ),
-                                ),
-
-                                /// Collapsing App bar, pins to the top of the list
-                                SliverAppBar(
-                                  pinned: true,
-                                  collapsedHeight: minAppBarHeight,
-                                  toolbarHeight: minAppBarHeight,
-                                  expandedHeight: maxAppBarHeight,
-                                  backgroundColor: Colors.transparent,
-                                  elevation: 0,
-                                  leading: SizedBox.shrink(),
-                                  flexibleSpace: SizedBox.expand(
-                                    child: _AppBar(
-                                      widget.data.type,
-                                      scrollPos: _scrollPos,
-                                      sectionIndex: _sectionIndex,
-                                    ),
-                                  ),
-                                ),
-
-                                /// Editorial content (text and images)
-                                _ScrollingContent(
-                                  widget.data,
-                                  scrollPos: _scrollPos,
-                                  sectionNotifier: _sectionIndex,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  /// Scrolling content
+                  _EditorialScrollRegion(
+                    contentPadding: widget.contentPadding,
+                    scroller: _scroller,
+                    scrollPos: _scrollPos,
+                    illustrationHeight: illustrationHeight,
+                    data: widget.data,
+                    sectionIndex: _sectionIndex,
+                    minAppBarHeight: minAppBarHeight,
+                    maxAppBarHeight: maxAppBarHeight,
                   ),
 
                   /// Home Btn
-                  AnimatedBuilder(
-                    animation: _scroller,
-                    builder: (_, child) {
-                      return AnimatedOpacity(
-                        opacity: _scrollPos.value > 0 ? 0 : 1,
-                        duration: $styles.times.med,
-                        child: child,
-                      );
-                    },
-                    child: Align(
-                      alignment: backBtnAlign,
-                      child: Padding(
-                        padding: EdgeInsets.all($styles.insets.sm),
-                        child: BackBtn(icon: AppIcons.north, onPressed: _handleBackPressed),
-                      ),
-                    ),
+                  _EditorialBackButton(
+                    scroller: _scroller,
+                    scrollPos: _scrollPos,
+                    backBtnAlign: backBtnAlign,
+                    onPressed: _handleBackPressed,
                   ),
                 ],
               ),
@@ -213,6 +134,171 @@ class _WonderEditorialScreenState extends State<WonderEditorialScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _EditorialIllustrationSection extends StatelessWidget {
+  const _EditorialIllustrationSection({
+    required this.scrollPos,
+    required this.illustrationHeight,
+    required this.wonderType,
+    required this.contentPadding,
+  });
+
+  final ValueNotifier<double> scrollPos;
+  final double illustrationHeight;
+  final WonderType wonderType;
+  final EdgeInsets contentPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    // Sits underneath the scrolling content, fades out as it scrolls
+    return SizedBox(
+      height: illustrationHeight,
+      child: ValueListenableBuilder<double>(
+        valueListenable: scrollPos,
+        builder: (_, value, child) {
+          // get some value between 0 and 1, based on the amt scrolled
+          double opacity = (1 - value / 700).clamp(0, 1);
+          return Opacity(opacity: opacity, child: child);
+        },
+        // This is due to a bug: https://github.com/flutter/flutter/issues/101872
+        child: RepaintBoundary(
+          child: _TopIllustration(
+            wonderType,
+            // Polish: Inject the content padding into the illustration as an offset, so it can center itself relative to the content
+            // this allows the background to extend underneath the vertical side nav when it has rounded corners.
+            fgOffset: Offset(contentPadding.left / 2, 0),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditorialScrollRegion extends StatelessWidget {
+  const _EditorialScrollRegion({
+    required this.contentPadding,
+    required this.scroller,
+    required this.scrollPos,
+    required this.illustrationHeight,
+    required this.data,
+    required this.sectionIndex,
+    required this.minAppBarHeight,
+    required this.maxAppBarHeight,
+  });
+
+  final EdgeInsets contentPadding;
+  final ScrollController scroller;
+  final ValueNotifier<double> scrollPos;
+  final double illustrationHeight;
+  final WonderData data;
+  final ValueNotifier<int> sectionIndex;
+  final double minAppBarHeight;
+  final double maxAppBarHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    // Includes an invisible gap at the top, then scrolls over the illustration
+    return TopCenter(
+      child: Padding(
+        padding: contentPadding,
+        child: SizedBox(
+          child: FocusTraversalGroup(
+            child: FullscreenKeyboardListScroller(
+              scrollController: scroller,
+              child: CustomScrollView(
+                controller: scroller,
+                scrollBehavior: ScrollConfiguration.of(context).copyWith(),
+                key: PageStorageKey('editorial'),
+                slivers: [
+                  /// Invisible padding at the top of the list, so the illustration shows through the btm
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: illustrationHeight),
+                  ),
+
+                  /// Text content, animates itself to hide behind the app bar as it scrolls up
+                  SliverToBoxAdapter(
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: scrollPos,
+                      builder: (_, value, child) {
+                        double offsetAmt = max(0, value * .3);
+                        double opacity = (1 - offsetAmt / 150).clamp(0, 1);
+                        return Transform.translate(
+                          offset: Offset(0, offsetAmt),
+                          child: Opacity(opacity: opacity, child: child),
+                        );
+                      },
+                      child: _TitleText(data, scroller: scroller),
+                    ),
+                  ),
+
+                  /// Collapsing App bar, pins to the top of the list
+                  SliverAppBar(
+                    pinned: true,
+                    collapsedHeight: minAppBarHeight,
+                    toolbarHeight: minAppBarHeight,
+                    expandedHeight: maxAppBarHeight,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: SizedBox.shrink(),
+                    flexibleSpace: SizedBox.expand(
+                      child: _AppBar(
+                        data.type,
+                        scrollPos: scrollPos,
+                        sectionIndex: sectionIndex,
+                      ),
+                    ),
+                  ),
+
+                  /// Editorial content (text and images)
+                  _ScrollingContent(
+                    data,
+                    scrollPos: scrollPos,
+                    sectionNotifier: sectionIndex,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditorialBackButton extends StatelessWidget {
+  const _EditorialBackButton({
+    required this.scroller,
+    required this.scrollPos,
+    required this.backBtnAlign,
+    required this.onPressed,
+  });
+
+  final ScrollController scroller;
+  final ValueNotifier<double> scrollPos;
+  final Alignment backBtnAlign;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: scroller,
+      builder: (_, child) {
+        return AnimatedOpacity(
+          opacity: scrollPos.value > 0 ? 0 : 1,
+          duration: $styles.times.med,
+          child: child,
+        );
+      },
+      child: Align(
+        alignment: backBtnAlign,
+        child: Padding(
+          padding: EdgeInsets.all($styles.insets.sm),
+          child: BackBtn(icon: AppIcons.north, onPressed: onPressed),
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,16 @@
 part of '../editorial_screen.dart';
 
+String _fixNewlines(String text) {
+  const nl = '\n';
+  final chunks = text.split(nl);
+  while (chunks.last == nl) {
+    chunks.removeLast();
+  }
+  chunks.removeWhere((element) => element.trim().isEmpty);
+  final result = chunks.join('$nl$nl');
+  return result;
+}
+
 class _ScrollingContent extends StatelessWidget {
   const _ScrollingContent(
     this.data, {
@@ -11,59 +22,10 @@ class _ScrollingContent extends StatelessWidget {
   final ValueNotifier<double> scrollPos;
   final ValueNotifier<int> sectionNotifier;
 
-  String _fixNewlines(String text) {
-    const nl = '\n';
-    final chunks = text.split(nl);
-    while (chunks.last == nl) {
-      chunks.removeLast();
-    }
-    chunks.removeWhere((element) => element.trim().isEmpty);
-    final result = chunks.join('$nl$nl');
-    return result;
-  }
-
   @override
   Widget build(BuildContext context) {
     Widget buildText(String value, bool useDropCaps) {
-      final bool skipCaps = !localeLogic.isEnglish || !useDropCaps;
-      final TextStyle dropStyle = $styles.text.dropCase;
-      final TextStyle bodyStyle = $styles.text.body;
-      final String dropChar = value.substring(0, 1);
-      final scaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
-      final double dropCapWidth = StringUtils.measure(dropChar, dropStyle).width * scaleFactor;
-      return Focus(
-        child: Semantics(
-          label: value,
-          child: ExcludeSemantics(
-            child: skipCaps
-                ? Text(_fixNewlines(value), style: bodyStyle)
-                : DropCapText(
-                    _fixNewlines(value).substring(1),
-                    dropCap: DropCap(
-                      width: dropCapWidth,
-                      height: $styles.text.body.fontSize! * $styles.text.body.height! * 2,
-                      child: Transform.translate(
-                        offset: Offset(0, bodyStyle.fontSize! * (bodyStyle.height! - 1) - 2),
-                        child: Text(
-                          dropChar,
-                          overflow: TextOverflow.visible,
-                          style: $styles.text.dropCase.copyWith(
-                            color: $styles.colors.accent3,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                    ),
-                    style: $styles.text.body,
-                    dropCapPadding: EdgeInsets.only(right: 6),
-                    dropCapStyle: $styles.text.dropCase.copyWith(
-                      color: $styles.colors.accent3,
-                      height: 1,
-                    ),
-                  ),
-          ),
-        ),
-      );
+      return _DropCapText(value: value, useDropCaps: useDropCaps);
     }
 
     Widget buildHiddenCollectible({required int slot}) {
@@ -364,5 +326,50 @@ class RenderSliverBackgroundColor extends RenderProxySliver {
       );
       context.paintChild(child!, offset + childParentData.paintOffset);
     }
+  }
+}
+
+class _DropCapText extends StatelessWidget {
+  const _DropCapText({required this.value, required this.useDropCaps});
+
+  final String value;
+  final bool useDropCaps;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool skipCaps = !localeLogic.isEnglish || !useDropCaps;
+    final TextStyle dropStyle = $styles.text.dropCase;
+    final TextStyle bodyStyle = $styles.text.body;
+    final String dropChar = value.substring(0, 1);
+    final scaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
+    final double dropCapWidth = StringUtils.measure(dropChar, dropStyle).width * scaleFactor;
+    final String fixedText = _fixNewlines(value);
+    return Focus(
+      child: Semantics(
+        label: value,
+        child: ExcludeSemantics(
+          child: skipCaps
+              ? Text(fixedText, style: bodyStyle)
+              : DropCapText(
+                  fixedText.substring(1),
+                  dropCap: DropCap(
+                    width: dropCapWidth,
+                    height: bodyStyle.fontSize! * bodyStyle.height! * 2,
+                    child: Transform.translate(
+                      offset: Offset(0, bodyStyle.fontSize! * (bodyStyle.height! - 1) - 2),
+                      child: Text(
+                        dropChar,
+                        overflow: TextOverflow.visible,
+                        style: dropStyle.copyWith(color: $styles.colors.accent3, height: 1),
+                      ),
+                    ),
+                  ),
+                  style: bodyStyle,
+                  dropCapPadding: EdgeInsets.only(right: 6),
+                  dropCapStyle: dropStyle.copyWith(color: $styles.colors.accent3, height: 1),
+                ),
+        ),
+      ),
+    );
   }
 }
