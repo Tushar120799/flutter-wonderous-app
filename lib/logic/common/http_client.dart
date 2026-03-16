@@ -23,6 +23,18 @@ class HttpClient {
     });
   }
 
+  /// Sends a GET request using an injected [http.Client]. Used by services
+  /// that need to be testable (e.g. [ArtifactAPIService]).
+  static Future<HttpResponse> sendWithClient(
+    http.Client client,
+    String url, {
+    Map<String, String>? headers,
+  }) async {
+    return await _request(() async {
+      return await client.get(Uri.parse(url), headers: headers);
+    });
+  }
+
   static Future<HttpResponse> send(
     String url, {
     Map<String, dynamic>? urlParams,
