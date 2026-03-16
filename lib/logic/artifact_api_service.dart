@@ -18,7 +18,7 @@ class ArtifactAPIService {
   ArtifactData? _parseArtifactData(Map<String, dynamic> content) {
     // Source: https://metmuseum.github.io/
     return ArtifactData(
-      objectId: content['objectID'].toString(),
+      objectId: content['objectID']?.toString() ?? '',
       title: content['title'] ?? '',
       image: content['primaryImage'] ?? '',
       date: content['objectDate'] ?? '',
