@@ -2,8 +2,8 @@ import 'package:unsplash_client/unsplash_client.dart';
 import 'package:wonders/logic/data/unsplash_photo_data.dart';
 
 /// Note: This service is no-longer used in the production app, but exist to enable development tools like [UnsplashDownloadService]
-String unsplashAccessKey = 'dxqHsX7IOURA5hfh0fuhL-cuX6q2-5DqghC77mnmrAU';
-String unsplashSecretKey = 'yTDPsxt6soBmcym7shd24t4vlYYDcOnzWyJ07O3UyEY';
+const String unsplashAccessKey = String.fromEnvironment('UNSPLASH_ACCESS_KEY', defaultValue: '');
+const String unsplashSecretKey = String.fromEnvironment('UNSPLASH_SECRET_KEY', defaultValue: '');
 
 class UnsplashService {
   final client = UnsplashClient(
