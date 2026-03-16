@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
     setState(() {
       _wonderIndex = newIndex;
-      settingsLogic.prevWonderIndex.value = _wonderIndex;
+      settingsLogic.setLastWonderIndex(_wonderIndex);
     });
     AppHaptics.lightImpact();
   }

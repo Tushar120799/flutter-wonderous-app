@@ -14,6 +14,12 @@ class SettingsLogic with ThrottledSaveLoadMixin {
 
   final bool useBlurs = !PlatformInfo.isAndroid;
 
+  void setLastWonderIndex(int index) => prevWonderIndex.value = index;
+
+  void completeOnboarding() => hasCompletedOnboarding.value = true;
+
+  void setPanelOpen(bool open) => isSearchPanelOpen.value = open;
+
   Future<void> changeLocale(Locale value) async {
     currentLocale.value = value.languageCode;
     await localeLogic.loadIfChanged(value);
