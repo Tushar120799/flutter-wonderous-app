@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class Throttler {
   Throttler(this.interval);
