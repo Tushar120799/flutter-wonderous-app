@@ -44,8 +44,7 @@ class _ArtifactImageBtn extends StatelessWidget {
   }
 
   void _handleImagePressed(BuildContext context) {
-    appLogic.showFullscreenDialogRoute(
-      context,
+    navigationService.showFullscreenDialogRoute(
       FullscreenUrlImgViewer(urls: [data.selfHostedImageUrl]),
     );
   }

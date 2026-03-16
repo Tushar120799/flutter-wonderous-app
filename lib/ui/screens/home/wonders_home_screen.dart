@@ -83,8 +83,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   void _handleOpenMenuPressed() async {
     setState(() => _isMenuOpen = true);
-    WonderType? pickedWonder = await appLogic.showFullscreenDialogRoute<WonderType>(
-      context,
+    WonderType? pickedWonder = await navigationService.showFullscreenDialogRoute<WonderType>(
       HomeMenu(data: currentWonder),
       transparent: true,
     );

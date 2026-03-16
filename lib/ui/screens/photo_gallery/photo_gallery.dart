@@ -153,8 +153,7 @@ class _PhotoGalleryState extends State<PhotoGallery> {
       final urls = _photoIds.value.map((e) {
         return UnsplashPhotoData.getSelfHostedUrl(e, UnsplashPhotoSize.xl);
       }).toList();
-      int? newIndex = await appLogic.showFullscreenDialogRoute(
-        context,
+      int? newIndex = await navigationService.showFullscreenDialogRoute(
         FullscreenUrlImgViewer(urls: urls, index: _index),
       );
 

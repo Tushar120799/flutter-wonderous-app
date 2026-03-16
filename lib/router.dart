@@ -62,6 +62,7 @@ AppRoute get _collectionRoute => AppRoute(
 
 /// Routing table, matches string paths to UI Screens, optionally parses params from the paths
 final appRouter = GoRouter(
+  navigatorKey: navigationService.navigatorKey,
   redirect: _handleRedirect,
   errorPageBuilder: (context, state) => MaterialPage(child: PageNotFound(state.uri.toString())),
   routes: [
