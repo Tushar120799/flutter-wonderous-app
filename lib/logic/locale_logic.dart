@@ -7,7 +7,10 @@ class LocaleLogic {
   final Locale _defaultLocal = Locale('en');
 
   AppLocalizations? _strings;
-  AppLocalizations get strings => _strings!;
+  AppLocalizations get strings {
+    assert(_strings != null, 'LocaleLogic.strings accessed before load() completed — call await localeLogic.load() first');
+    return _strings!;
+  }
   bool get isLoaded => _strings != null;
   bool get isEnglish => strings.localeName == 'en';
 

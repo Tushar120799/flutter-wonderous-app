@@ -103,25 +103,29 @@ class CollectiblesLogic with ThrottledSaveLoadMixin {
     String imageUrl = '',
   }) async {
     if (!_nativeWidget.isSupported) return;
-    // Save title
-    await _nativeWidget.save<String>('lastDiscoveredTitle', title);
-    // Subtitle
-    String subTitle = '';
-    if (id.isNotEmpty) {
-      final artifactData = await artifactLogic.getArtifactByID(id);
-      subTitle = artifactData?.date ?? '';
+    try {
+      // Save title
+      await _nativeWidget.save<String>('lastDiscoveredTitle', title);
+      // Subtitle
+      String subTitle = '';
+      if (id.isNotEmpty) {
+        final artifactData = await artifactLogic.getArtifactByID(id);
+        subTitle = artifactData?.date ?? '';
+      }
+      await _nativeWidget.save<String>('lastDiscoveredSubTitle', subTitle);
+      // Image,
+      // Download, convert to base64 string and write to shared widget data
+      String imageBase64 = '';
+      if (imageUrl.isNotEmpty) {
+        var bytes = await http.readBytes(Uri.parse(imageUrl));
+        imageBase64 = base64Encode(bytes);
+        debugPrint('Saving base64 bytes for homeWidget');
+      }
+      await _nativeWidget.save<String>('lastDiscoveredImageData', imageBase64);
+      await _nativeWidget.markDirty();
+    } catch (e) {
+      debugPrint('_updateNativeHomeWidgetData failed: $e');
     }
-    await _nativeWidget.save<String>('lastDiscoveredSubTitle', subTitle);
-    // Image,
-    // Download, convert to base64 string and write to shared widget data
-    String imageBase64 = '';
-    if (imageUrl.isNotEmpty) {
-      var bytes = await http.readBytes(Uri.parse(imageUrl));
-      imageBase64 = base64Encode(bytes);
-      debugPrint('Saving base64 bytes for homeWidget');
-    }
-    await _nativeWidget.save<String>('lastDiscoveredImageData', imageBase64);
-    await _nativeWidget.markDirty();
   }
 
   @override
