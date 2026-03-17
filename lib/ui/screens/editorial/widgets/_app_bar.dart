@@ -46,34 +46,11 @@ class _AppBar extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   /// Masked image
-                  BottomCenter(
-                    child: SizedBox(
-                      width: showOverlay ? double.infinity : $styles.sizes.maxContentWidth1,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 50),
-                        child:
-                            ClipPath(
-                                  // Switch arch type to Rect if we are showing the title bar
-                                  clipper: showOverlay ? null : ArchClipper(arch),
-                                  child: ValueListenableBuilder<double>(
-                                    valueListenable: scrollPos,
-                                    builder: (_, value, child) {
-                                      double opacity = (.4 + (value / 1500)).clamp(0, 1);
-                                      return ScalingListItem(
-                                        scrollPos: scrollPos,
-                                        child: Image.asset(
-                                          wonderType.photo1,
-                                          fit: BoxFit.cover,
-                                          opacity: AlwaysStoppedAnimation(opacity),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                                .maybeAnimate(delay: $styles.times.pageTransition + 500.delayMs)
-                                .fadeIn(duration: $styles.times.slow),
-                      ),
-                    ),
+                  _AppBarMaskedSection(
+                    showOverlay: showOverlay,
+                    arch: arch,
+                    scrollPos: scrollPos,
+                    wonderType: wonderType,
                   ),
 
                   /// Colored overlay
@@ -104,5 +81,73 @@ class _AppBar extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _AppBarMaskedSection extends StatelessWidget {
+  const _AppBarMaskedSection({
+    required this.showOverlay,
+    required this.arch,
+    required this.scrollPos,
+    required this.wonderType,
+  });
+
+  final bool showOverlay;
+  final ArchType arch;
+  final ValueNotifier<double> scrollPos;
+  final WonderType wonderType;
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomCenter(
+      child: SizedBox(
+        width: showOverlay ? double.infinity : $styles.sizes.maxContentWidth1,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 50),
+          child: _AppBarImage(
+            showOverlay: showOverlay,
+            arch: arch,
+            scrollPos: scrollPos,
+            wonderType: wonderType,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppBarImage extends StatelessWidget {
+  const _AppBarImage({
+    required this.showOverlay,
+    required this.arch,
+    required this.scrollPos,
+    required this.wonderType,
+  });
+
+  final bool showOverlay;
+  final ArchType arch;
+  final ValueNotifier<double> scrollPos;
+  final WonderType wonderType;
+
+  @override
+  Widget build(BuildContext context) {
+    // Switch arch type to Rect if we are showing the title bar
+    return ClipPath(
+      clipper: showOverlay ? null : ArchClipper(arch),
+      child: ValueListenableBuilder<double>(
+        valueListenable: scrollPos,
+        builder: (_, value, child) {
+          double opacity = (.4 + (value / 1500)).clamp(0, 1);
+          return ScalingListItem(
+            scrollPos: scrollPos,
+            child: Image.asset(
+              wonderType.photo1,
+              fit: BoxFit.cover,
+              opacity: AlwaysStoppedAnimation(opacity),
+            ),
+          );
+        },
+      ),
+    ).maybeAnimate(delay: $styles.times.pageTransition + 500.delayMs).fadeIn(duration: $styles.times.slow);
   }
 }

@@ -295,33 +295,78 @@ class _PhotoGalleryState extends State<PhotoGallery> {
                       focusNode: _focusNodes[index],
                       onFocusChanged: (isFocused) => _handleImageFocusChanged(index, isFocused),
                       onPressed: () => _handleImageTapped(index, isSelected),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(
-                          width: imgSize.width,
-                          height: imgSize.height,
-                          child: (useClipPathWorkAroundForWeb == false)
-                              ? photoWidget
-                              : Stack(
-                                  children: [
-                                    photoWidget,
-                                    // Because the web platform doesn't support clipPath, we use a workaround to highlight the selected image
-                                    Positioned.fill(
-                                      child: AnimatedOpacity(
-                                        duration: $styles.times.med,
-                                        opacity: isSelected ? 0 : ($styles.highContrast ? 0.4 : 0.7),
-                                        child: ColoredBox(color: $styles.colors.black),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
+                      child: _PhotoTile(
+                        imgSize: imgSize,
+                        isSelected: isSelected,
+                        photoWidget: photoWidget,
+                        useClipPathWorkAroundForWeb: useClipPathWorkAroundForWeb,
                       ),
                     ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+class _PhotoTile extends StatelessWidget {
+  const _PhotoTile({
+    required this.imgSize,
+    required this.isSelected,
+    required this.photoWidget,
+    required this.useClipPathWorkAroundForWeb,
+  });
+
+  final Size imgSize;
+  final bool isSelected;
+  final Widget photoWidget;
+  final bool useClipPathWorkAroundForWeb;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: imgSize.width,
+        height: imgSize.height,
+        child: (useClipPathWorkAroundForWeb == false)
+            ? photoWidget
+            : _HighlightOverlay(
+                isSelected: isSelected,
+                useHighContrast: $styles.highContrast,
+                child: photoWidget,
+              ),
+      ),
+    );
+  }
+}
+
+class _HighlightOverlay extends StatelessWidget {
+  const _HighlightOverlay({
+    required this.isSelected,
+    required this.useHighContrast,
+    required this.child,
+  });
+
+  final bool isSelected;
+  final bool useHighContrast;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // Because the web platform doesn't support clipPath, we use a workaround to highlight the selected image
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: AnimatedOpacity(
+            duration: $styles.times.med,
+            opacity: isSelected ? 0 : (useHighContrast ? 0.4 : 0.7),
+            child: ColoredBox(color: $styles.colors.black),
+          ),
+        ),
+      ],
     );
   }
 }
